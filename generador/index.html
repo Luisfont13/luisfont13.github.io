@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios</title>
+    <title>Gestión con Local Storage</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,62 +31,93 @@
     </style>
 </head>
 <body>
-    <h1>Gestión de Usuarios</h1>
+    <h1>Gestión de Usuarios y Códigos</h1>
 
-    <!-- Registro -->
+    <!-- Registro de usuario -->
     <div>
-        <h2>Registrar Nuevo Usuario</h2>
+        <h2>Registrar Usuario</h2>
         <input type="text" id="nombre-usuario" placeholder="Nombre">
-        <input type="email" id="correo-electronico" placeholder="Correo">
-        <input type="password" id="contraseña" placeholder="Contraseña">
-        <button id="registro-btn">Registrar Usuario</button>
+        <input type="email" id="correo-usuario" placeholder="Correo electrónico">
+        <input type="number" id="puntos-usuario" placeholder="Puntos iniciales (Opcional)">
+        <button id="registrar-usuario">Registrar Usuario</button>
+        <p id="resultado-registro"></p>
     </div>
 
-    <!-- Guardar datos como JSON -->
+    <!-- Generador de códigos -->
     <div>
-        <h2>Exportar Usuarios</h2>
-        <button id="exportar-btn">Exportar a JSON</button>
+        <h2>Generar Código</h2>
+        <input type="email" id="correo-generador" placeholder="Correo del usuario">
+        <button id="generar-codigo">Generar Código</button>
+        <p id="resultado-codigo"></p>
     </div>
 
-    <p id="mensaje"></p>
+    <!-- Mostrar usuarios -->
+    <div>
+        <h2>Ver Usuarios Registrados</h2>
+        <button id="mostrar-usuarios">Mostrar Usuarios</button>
+        <div id="usuarios-lista"></div>
+    </div>
 
     <script>
-        // Simulación de base de datos con objeto en memoria
-        const usuarios = {};
+        // Inicializar Local Storage
+        const usuarios = JSON.parse(localStorage.getItem('usuarios')) || {};
 
         // Registrar un nuevo usuario
-        document.getElementById("registro-btn").addEventListener("click", () => {
-            const nombre = document.getElementById("nombre-usuario").value.trim();
-            const correo = document.getElementById("correo-electronico").value.trim();
-            const contraseña = document.getElementById("contraseña").value.trim();
-            const mensaje = document.getElementById("mensaje");
+        document.getElementById('registrar-usuario').addEventListener('click', () => {
+            const nombre = document.getElementById('nombre-usuario').value.trim();
+            const correo = document.getElementById('correo-usuario').value.trim();
+            const puntos = parseInt(document.getElementById('puntos-usuario').value.trim()) || 100;
+            const resultado = document.getElementById('resultado-registro');
 
-            if (!nombre || !correo || !contraseña) {
-                mensaje.textContent = "Por favor, completa todos los campos.";
+            if (!nombre || !correo) {
+                resultado.textContent = "Por favor, completa todos los campos.";
                 return;
             }
 
             if (usuarios[correo]) {
-                mensaje.textContent = "El usuario ya existe.";
+                resultado.textContent = "El usuario ya está registrado.";
                 return;
             }
 
-            usuarios[correo] = { nombre, contraseña, puntos: 100 }; // Puntos por defecto
-            mensaje.textContent = "Usuario registrado exitosamente.";
+            usuarios[correo] = { nombre, puntos, codigos_generados: [] };
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            resultado.textContent = `Usuario ${nombre} registrado con éxito.`;
         });
 
-        // Exportar usuarios a un archivo JSON
-        document.getElementById("exportar-btn").addEventListener("click", () => {
-            const dataStr = JSON.stringify(usuarios, null, 4);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
+        // Generar un código
+        document.getElementById('generar-codigo').addEventListener('click', () => {
+            const correo = document.getElementById('correo-generador').value.trim();
+            const resultado = document.getElementById('resultado-codigo');
 
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "usuarios.json";
-            a.click();
+            const usuario = usuarios[correo];
+            if (!usuario) {
+                resultado.textContent = "Usuario no encontrado.";
+                return;
+            }
 
-            URL.revokeObjectURL(url);
+            if (usuario.puntos < 50) {
+                resultado.textContent = "No tienes suficientes puntos para generar un código.";
+                return;
+            }
+
+            const codigo = `COD-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+            usuario.codigos_generados.push(codigo);
+            usuario.puntos -= 50;
+
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            resultado.textContent = `Código generado: ${codigo}. Puntos restantes: ${usuario.puntos}.`;
+        });
+
+        // Mostrar usuarios registrados
+        document.getElementById('mostrar-usuarios').addEventListener('click', () => {
+            const lista = document.getElementById('usuarios-lista');
+            lista.innerHTML = ""; // Limpiar la lista
+
+            Object.entries(usuarios).forEach(([correo, datos]) => {
+                const item = document.createElement('p');
+                item.textContent = `Correo: ${correo}, Nombre: ${datos.nombre}, Puntos: ${datos.puntos}, Códigos: ${datos.codigos_generados.join(", ")}`;
+                lista.appendChild(item);
+            });
         });
     </script>
 </body>
