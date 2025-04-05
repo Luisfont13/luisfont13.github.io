@@ -28,7 +28,7 @@
         input, select {
             width: 200px;
         }
-        #panel, #generador {
+        #inicio, #registro, #panel {
             display: none;
         }
         h1, h2 {
@@ -37,12 +37,13 @@
     </style>
 </head>
 <body>
-    <h1>Sistema de Generador de Códigos</h1>
-    <div id="inicio">
-        <h2>Registro / Inicio de Sesión</h2>
+    <h1>Generador de Códigos</h1>
+    <div id="registro">
+        <h2>Registro</h2>
         <form id="registro-form">
             <input type="text" id="nombre-usuario" placeholder="Nombre de usuario" required><br>
             <input type="email" id="correo-electronico" placeholder="Correo electrónico" required><br>
+            <input type="password" id="contraseña" placeholder="Contraseña" required><br>
             <input type="number" id="edad" placeholder="Edad" required><br>
             <select id="genero" required>
                 <option value="">Selecciona género</option>
@@ -51,6 +52,14 @@
                 <option value="Otro">Otro</option>
             </select><br>
             <button type="button" id="registro-btn">Registrarse</button>
+        </form>
+    </div>
+
+    <div id="inicio">
+        <h2>Inicio de Sesión</h2>
+        <form id="login-form">
+            <input type="email" id="login-correo" placeholder="Correo electrónico" required><br>
+            <input type="password" id="login-contraseña" placeholder="Contraseña" required><br>
             <button type="button" id="login-btn">Iniciar Sesión</button>
         </form>
     </div>
@@ -64,61 +73,69 @@
     </div>
 
     <script>
-        // Simulación de base de datos en memoria
-        const usuarios = {};
+        // Simulación de datos almacenados en JSON
+        let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
-        // Manejar el registro de usuarios
+        // Registro de usuarios
         document.getElementById("registro-btn").addEventListener("click", () => {
             const nombre = document.getElementById("nombre-usuario").value;
             const correo = document.getElementById("correo-electronico").value;
+            const contraseña = document.getElementById("contraseña").value;
             const edad = document.getElementById("edad").value;
             const genero = document.getElementById("genero").value;
 
-            if (usuarios[nombre]) {
-                alert("Nombre de usuario ya está en uso. Escoge otro.");
-            } else if (Object.values(usuarios).some(u => u.correo === correo)) {
-                alert("El correo electrónico ya está registrado.");
+            if (usuarios[correo]) {
+                alert("El correo ya está registrado. Usa otro.");
             } else {
-                usuarios[nombre] = { correo, edad, genero, puntos: 100, codigos_generados: [] };
+                usuarios[correo] = { nombre, contraseña, edad, genero, puntos: 100, codigos_generados: [] };
+                localStorage.setItem("usuarios", JSON.stringify(usuarios));
                 alert("Registro exitoso.");
-                document.getElementById("usuario-actual").textContent = nombre;
-                mostrarPanel(nombre);
+                mostrarInicioSesion();
             }
         });
 
-        // Manejar el inicio de sesión
+        // Inicio de sesión
         document.getElementById("login-btn").addEventListener("click", () => {
-            const nombre = document.getElementById("nombre-usuario").value;
-            if (usuarios[nombre]) {
-                alert(`Inicio de sesión exitoso. Bienvenido, ${nombre}!`);
-                document.getElementById("usuario-actual").textContent = nombre;
-                mostrarPanel(nombre);
+            const correo = document.getElementById("login-correo").value;
+            const contraseña = document.getElementById("login-contraseña").value;
+
+            if (usuarios[correo] && usuarios[correo].contraseña === contraseña) {
+                alert(`Inicio de sesión exitoso. Bienvenido, ${usuarios[correo].nombre}!`);
+                document.getElementById("usuario-actual").textContent = usuarios[correo].nombre;
+                mostrarPanel(correo);
             } else {
-                alert("Nombre de usuario no encontrado. Regístrate primero.");
+                alert("Correo o contraseña incorrectos.");
             }
         });
 
-        // Mostrar el panel principal
-        const mostrarPanel = (usuario) => {
+        // Mostrar panel principal
+        const mostrarPanel = (correo) => {
+            document.getElementById("registro").style.display = "none";
             document.getElementById("inicio").style.display = "none";
             document.getElementById("panel").style.display = "block";
-            document.getElementById("puntos").textContent = usuarios[usuario].puntos;
+            document.getElementById("puntos").textContent = usuarios[correo].puntos;
+
+            // Guardar correo actual
+            localStorage.setItem("usuarioActual", correo);
         };
 
         // Manejar el botón de "Reclamar Código"
         document.getElementById("generar-btn").addEventListener("click", () => {
-            const usuario = document.getElementById("usuario-actual").textContent;
-            const datosUsuario = usuarios[usuario];
+            const correo = localStorage.getItem("usuarioActual");
+            const usuario = usuarios[correo];
 
-            if (datosUsuario.puntos >= 50) {
-                datosUsuario.puntos -= 50;
+            if (usuario.puntos >= 50) {
+                usuario.puntos -= 50;
                 const codigo = `Codigo${Math.floor(Math.random() * 1000)}`;
-                datosUsuario.codigos_generados.push(codigo);
+                usuario.codigos_generados.push(codigo);
 
                 document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
-                document.getElementById("puntos").textContent = datosUsuario.puntos;
+                document.getElementById("puntos").textContent = usuario.puntos;
                 document.getElementById("copiar-btn").disabled = false;
                 document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
+
+                // Actualizar datos
+                localStorage.setItem("usuarios", JSON.stringify(usuarios));
             } else {
                 alert("No tienes suficientes puntos para reclamar un código.");
             }
@@ -131,6 +148,14 @@
                 alert("El código se ha copiado al portapapeles.");
             });
         });
+
+        const mostrarInicioSesion = () => {
+            document.getElementById("registro").style.display = "none";
+            document.getElementById("inicio").style.display = "block";
+        };
+
+        // Mostrar registro inicial
+        document.getElementById("registro").style.display = "block";
     </script>
 </body>
 </html>
