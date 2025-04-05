@@ -9,26 +9,14 @@
 <body>
     <header>
         <h1>¡Bienvenido al portafolio de Luis!</h1>
-        <nav>
-            <ul>
-                <li><a href="#sobre-mi">Sobre mí</a></li>
-                <li><a href="#proyectos">Proyectos</a></li>
-                <li><a href="#contacto">Contacto</a></li>
-            </ul>
-        </nav>
     </header>
-    <section id="sobre-mi">
-        <h2>Sobre mí</h2>
-        <p>Soy un desarrollador apasionado por el diseño y la funcionalidad.</p>
+    <section>
+        <button id="generador-btn">Generador de Cuentas</button>
     </section>
-    <section id="lechita">
-        <h2>Proyectos</h2>
-        <div id="proyectos-lista"></div>
-    </section>
-    <footer id="contacto">
-        <h2>Contacto</h2>
-        <p>Email: luis@example.com</p>
-    </footer>
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('generador-btn').addEventListener('click', () => {
+            window.location.href = 'generador/archivo.html';
+        });
+    </script>
 </body>
 </html>
