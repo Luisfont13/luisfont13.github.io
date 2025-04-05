@@ -12,7 +12,7 @@
             text-align: center;
             padding: 20px;
         }
-        button, input, select {
+        button, input, select, a {
             background-color: #5a9;
             color: white;
             font-size: 16px;
@@ -21,8 +21,10 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
-        button:hover, input:hover, select:hover {
+        button:hover, input:hover, select:hover, a:hover {
             background-color: #47a;
         }
         input, select {
@@ -33,6 +35,9 @@
         }
         h1, h2 {
             color: #5a9;
+        }
+        a {
+            font-size: 14px;
         }
     </style>
 </head>
@@ -53,6 +58,7 @@
             </select><br>
             <button type="button" id="registro-btn">Registrarse</button>
         </form>
+        <a href="#" id="ir-inicio">¿Ya tienes cuenta? Iniciar sesión</a>
     </div>
 
     <div id="inicio">
@@ -62,6 +68,7 @@
             <input type="password" id="login-contraseña" placeholder="Contraseña" required><br>
             <button type="button" id="login-btn">Iniciar Sesión</button>
         </form>
+        <a href="#" id="ir-registro">¿No tienes cuenta? Regístrate</a>
     </div>
 
     <div id="panel">
@@ -73,10 +80,8 @@
     </div>
 
     <script>
-        // Simulación de datos almacenados en JSON
         let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
-        // Verificar si hay una sesión activa al cargar la página
         window.onload = () => {
             const usuarioActual = localStorage.getItem("usuarioActual");
             if (usuarioActual && usuarios[usuarioActual]) {
@@ -88,9 +93,14 @@
             }
         };
 
-        // Manejar la transición entre vistas
         const mostrarRegistroInicio = () => {
             document.getElementById("registro").style.display = "block";
+            document.getElementById("inicio").style.display = "none";
+            document.getElementById("panel").style.display = "none";
+        };
+
+        const mostrarInicioSesion = () => {
+            document.getElementById("registro").style.display = "none";
             document.getElementById("inicio").style.display = "block";
             document.getElementById("panel").style.display = "none";
         };
@@ -100,12 +110,9 @@
             document.getElementById("inicio").style.display = "none";
             document.getElementById("panel").style.display = "block";
             document.getElementById("puntos").textContent = usuarios[correo].puntos;
-
-            // Guardar correo actual en localStorage
             localStorage.setItem("usuarioActual", correo);
         };
 
-        // Registro de usuarios
         document.getElementById("registro-btn").addEventListener("click", () => {
             const nombre = document.getElementById("nombre-usuario").value.trim();
             const correo = document.getElementById("correo-electronico").value.trim();
@@ -113,26 +120,22 @@
             const edad = document.getElementById("edad").value.trim();
             const genero = document.getElementById("genero").value;
 
-            // Validar campos completos
             if (!nombre || !correo || !contraseña || !edad || !genero) {
                 alert("Todos los campos son obligatorios. Por favor, completa el formulario.");
                 return;
             }
 
-            // Validar unicidad del correo
             if (usuarios[correo]) {
                 alert("El correo ya está registrado. Usa otro.");
                 return;
             }
 
-            // Registrar usuario si pasa las validaciones
             usuarios[correo] = { nombre, contraseña, edad, genero, puntos: 100, codigos_generados: [] };
             localStorage.setItem("usuarios", JSON.stringify(usuarios));
             alert("Registro exitoso.");
             mostrarPanel(correo);
         });
 
-        // Inicio de sesión
         document.getElementById("login-btn").addEventListener("click", () => {
             const correo = document.getElementById("login-correo").value.trim();
             const contraseña = document.getElementById("login-contraseña").value.trim();
@@ -146,7 +149,16 @@
             }
         });
 
-        // Manejar el botón de "Reclamar Código"
+        document.getElementById("ir-inicio").addEventListener("click", (event) => {
+            event.preventDefault();
+            mostrarInicioSesion();
+        });
+
+        document.getElementById("ir-registro").addEventListener("click", (event) => {
+            event.preventDefault();
+            mostrarRegistroInicio();
+        });
+
         document.getElementById("generar-btn").addEventListener("click", () => {
             const correo = localStorage.getItem("usuarioActual");
             const usuario = usuarios[correo];
@@ -161,14 +173,12 @@
                 document.getElementById("copiar-btn").disabled = false;
                 document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
 
-                // Actualizar datos
                 localStorage.setItem("usuarios", JSON.stringify(usuarios));
             } else {
                 alert("No tienes suficientes puntos para reclamar un código.");
             }
         });
 
-        // Manejar el botón de "Copiar Código"
         document.getElementById("copiar-btn").addEventListener("click", () => {
             const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
             navigator.clipboard.writeText(codigo).then(() => {
