@@ -76,11 +76,11 @@
         <p>Puntos disponibles: <span id="puntos">100</span></p>
         <button id="generar-btn">Reclamar Código (50 pts)</button>
         <button id="copiar-btn" disabled>Copiar Código</button>
+        <button id="usar-btn" disabled>Marcar Código como Usado</button>
         <p id="codigo">Código generado aparecerá aquí.</p>
     </div>
 
     <script>
-        // Gestión de usuarios en el navegador
         let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
         window.onload = () => {
@@ -114,7 +114,6 @@
             localStorage.setItem("usuarioActual", correo);
         };
 
-        // Registro de usuarios
         document.getElementById("registro-btn").addEventListener("click", () => {
             const nombre = document.getElementById("nombre-usuario").value.trim();
             const correo = document.getElementById("correo-electronico").value.trim();
@@ -138,7 +137,6 @@
             mostrarPanel(correo);
         });
 
-        // Inicio de sesión
         document.getElementById("login-btn").addEventListener("click", () => {
             const correo = document.getElementById("login-correo").value.trim();
             const contraseña = document.getElementById("login-contraseña").value.trim();
@@ -152,31 +150,21 @@
             }
         });
 
-        // Navegación entre registro e inicio de sesión
-        document.getElementById("ir-inicio").addEventListener("click", (event) => {
-            event.preventDefault();
-            mostrarInicioSesion();
-        });
-
-        document.getElementById("ir-registro").addEventListener("click", (event) => {
-            event.preventDefault();
-            mostrarRegistroInicio();
-        });
-
-        // Generación de códigos
         document.getElementById("generar-btn").addEventListener("click", () => {
             const correo = localStorage.getItem("usuarioActual");
             const usuario = usuarios[correo];
 
             if (usuario.puntos >= 50) {
                 usuario.puntos -= 50;
-                const codigo = `Codigo${Math.floor(Math.random() * 1000)}`;
+                const codigo = { valor: `Codigo${Math.floor(Math.random() * 1000)}`, estado: "activo" };
                 usuario.codigos_generados.push(codigo);
 
-                document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
+                document.getElementById("codigo").textContent = `Código generado: ${codigo.valor}`;
                 document.getElementById("puntos").textContent = usuario.puntos;
                 document.getElementById("copiar-btn").disabled = false;
-                document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
+                document.getElementById("copiar-btn").setAttribute("data-codigo", codigo.valor);
+                document.getElementById("usar-btn").disabled = false;
+                document.getElementById("usar-btn").setAttribute("data-codigo", codigo.valor);
 
                 localStorage.setItem("usuarios", JSON.stringify(usuarios));
             } else {
@@ -184,13 +172,32 @@
             }
         });
 
-        // Copiar código al portapapeles
-        document.getElementById("copiar-btn").addEventListener("click", () => {
-            const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
-            navigator.clipboard.writeText(codigo).then(() => {
-                alert("El código se ha copiado al portapapeles.");
-            });
+        document.getElementById("usar-btn").addEventListener("click", () => {
+            const correo = localStorage.getItem("usuarioActual");
+            const codigoValor = document.getElementById("usar-btn").getAttribute("data-codigo");
+            const usuario = usuarios[correo];
+
+            const codigoIndex = usuario.codigos_generados.findIndex(c => c.valor === codigoValor);
+            if (codigoIndex !== -1) {
+                usuario.codigos_generados[codigoIndex].estado = "usado";
+                localStorage.setItem("usuarios", JSON.stringify(usuarios));
+                alert(`El código ${codigoValor} ha sido marcado como usado.`);
+                document.getElementById("codigo").textContent = "Código generado aparecerá aquí.";
+                document.getElementById("usar-btn").disabled = true;
+                document.getElementById("copiar-btn").disabled = true;
+            } else {
+                alert("Código no encontrado.");
+            }
         });
-    </script>
-</body>
-</html>
+
+        document.getElementById("copiar-btn").addEventListener("click", () => {
+            const codigoValor = document.getElementById("copiar-btn").getAttribute("data-codigo");
+            const correo = localStorage.getItem("usuarioActual");
+            const usuario = usuarios[correo];
+
+            const codigo = usuario.codigos_generados.find(c => c.valor === codigoValor && c.estado === "activo");
+            if (codigo) {
+                navigator.clipboard.writeText(codigo.valor).then(() => {
+                    alert("El código se ha copiado al portapapeles.");
+                });
+            } else
