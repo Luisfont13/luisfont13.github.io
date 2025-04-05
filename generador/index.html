@@ -33,6 +33,9 @@
         h1, h2 {
             color: #5a9;
         }
+        #registro, #inicio, #panel {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -43,35 +46,107 @@
         <h2>Registro de Usuario</h2>
         <input type="text" id="nombre-usuario" placeholder="Nombre de usuario">
         <input type="email" id="correo-electronico" placeholder="Correo electrónico">
-        <input type="number" id="puntos-iniciales" placeholder="Puntos iniciales (Opcional)">
-        <button id="registro-btn">Registrar Usuario</button>
+        <input type="password" id="contraseña" placeholder="Contraseña">
+        <button id="registro-btn">Registrarse</button>
         <p id="resultado-registro"></p>
+        <a href="#" id="ir-inicio">¿Ya tienes cuenta? Iniciar sesión</a>
+    </div>
+
+    <!-- Inicio de sesión -->
+    <div id="inicio">
+        <h2>Inicio de Sesión</h2>
+        <input type="email" id="login-correo" placeholder="Correo electrónico">
+        <input type="password" id="login-contraseña" placeholder="Contraseña">
+        <button id="login-btn">Iniciar Sesión</button>
+        <p id="resultado-inicio"></p>
+        <a href="#" id="ir-registro">¿No tienes cuenta? Regístrate</a>
+    </div>
+
+    <!-- Panel de usuario -->
+    <div id="panel">
+        <h2>Bienvenido, <span id="nombre-usuario-panel"></span>!</h2>
+        <p>Puntos disponibles: <span id="puntos-panel">0</span></p>
+        <button id="salir-btn">Cerrar Sesión</button>
     </div>
 
     <script>
         const servidorURL = "http://127.0.0.1:5000"; // URL de tu servidor Flask
 
-        // Función para registrar un nuevo usuario en el servidor
-        document.getElementById('registro-btn').addEventListener('click', async () => {
-            const nombre = document.getElementById('nombre-usuario').value.trim();
-            const correo = document.getElementById('correo-electronico').value.trim();
-            const puntos = parseInt(document.getElementById('puntos-iniciales').value.trim(), 10) || 100; // Puntos por defecto: 100
+        // Mostrar la sección inicial
+        document.getElementById("registro").style.display = "block";
 
-            const resultado = document.getElementById('resultado-registro');
+        // Registro de usuario
+        document.getElementById("registro-btn").addEventListener("click", async () => {
+            const nombre = document.getElementById("nombre-usuario").value.trim();
+            const correo = document.getElementById("correo-electronico").value.trim();
+            const contraseña = document.getElementById("contraseña").value.trim();
+            const resultado = document.getElementById("resultado-registro");
 
-            if (!nombre || !correo) {
-                resultado.textContent = "Por favor, completa todos los campos obligatorios.";
+            if (!nombre || !correo || !contraseña) {
+                resultado.textContent = "Por favor, completa todos los campos.";
                 return;
             }
 
             const response = await fetch(`${servidorURL}/agregar_usuario`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, correo, puntos })
+                body: JSON.stringify({ nombre, correo, contraseña, puntos: 100 }) // Inicia con 100 puntos
             });
 
             const data = await response.json();
             resultado.textContent = data.message || data.error;
+
+            if (response.ok) {
+                document.getElementById("registro").style.display = "none";
+                document.getElementById("inicio").style.display = "block";
+            }
+        });
+
+        // Inicio de sesión
+        document.getElementById("login-btn").addEventListener("click", async () => {
+            const correo = document.getElementById("login-correo").value.trim();
+            const contraseña = document.getElementById("login-contraseña").value.trim();
+            const resultado = document.getElementById("resultado-inicio");
+
+            if (!correo || !contraseña) {
+                resultado.textContent = "Por favor, completa todos los campos.";
+                return;
+            }
+
+            const response = await fetch(`${servidorURL}/iniciar_sesion`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo, contraseña })
+            });
+
+            const data = await response.json();
+            resultado.textContent = data.message || data.error;
+
+            if (response.ok) {
+                document.getElementById("inicio").style.display = "none";
+                document.getElementById("panel").style.display = "block";
+                document.getElementById("nombre-usuario-panel").textContent = data.nombre;
+                document.getElementById("puntos-panel").textContent = data.puntos;
+            }
+        });
+
+        // Navegación entre registro e inicio
+        document.getElementById("ir-inicio").addEventListener("click", (event) => {
+            event.preventDefault();
+            document.getElementById("registro").style.display = "none";
+            document.getElementById("inicio").style.display = "block";
+        });
+
+        document.getElementById("ir-registro").addEventListener("click", (event) => {
+            event.preventDefault();
+            document.getElementById("inicio").style.display = "none";
+            document.getElementById("registro").style.display = "block";
+        });
+
+        // Cerrar sesión
+        document.getElementById("salir-btn").addEventListener("click", () => {
+            document.getElementById("panel").style.display = "none";
+            document.getElementById("inicio").style.display = "block";
         });
     </script>
 </body>
