@@ -4,41 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Códigos</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2d2d2d;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            background-color: #5a9;
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #47a;
+        }
+        #codigo {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Generador de Códigos</h1>
-    </header>
-    <section>
-        <p>Haz clic en el botón para abrir el generador de códigos.</p>
-        <button id="generador-btn">Abrir Generador</button>
-    </section>
+    <h1>Generador de Códigos</h1>
+    <p>Puntos disponibles: <span id="puntos">100</span></p>
+    <button id="generar-btn">Reclamar Código (50 pts)</button>
+    <button id="copiar-btn" disabled>Copiar Código</button>
+    <p id="codigo">Código generado aparecerá aquí.</p>
     <script>
-        document.getElementById('generador-btn').addEventListener('click', () => {
-            window.open('ejecutar.sh'); // Asumiendo que estás en Linux y el archivo está en la misma carpeta.
+        // Simulación de archivos JSON en la carpeta "0"
+        const datos = ["Codigo1", "Codigo2", "Codigo3", "Codigo4"];
+        let puntos = 100;
+
+        // Manejar el botón de "Reclamar Código"
+        document.getElementById("generar-btn").addEventListener("click", () => {
+            if (puntos >= 50) {
+                if (datos.length > 0) {
+                    // Resta puntos
+                    puntos -= 50;
+                    document.getElementById("puntos").textContent = puntos;
+
+                    // Generar código
+                    const codigo = datos.shift();
+                    document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
+
+                    // Habilitar botón de copiar
+                    document.getElementById("copiar-btn").disabled = false;
+                    document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
+                } else {
+                    alert("Todos los códigos han sido utilizados.");
+                }
+            } else {
+                alert("No tienes suficientes puntos para reclamar un código.");
+            }
         });
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Códigos</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Generador de Códigos</h1>
-    </header>
-    <section>
-        <p>Haz clic en el botón para abrir el generador de códigos.</p>
-        <button id="generador-btn">Abrir Generador</button>
-    </section>
-    <script>
-        document.getElementById('generador-btn').addEventListener('click', () => {
-            window.open('ejecutar.sh'); // Asumiendo que estás en Linux y el archivo está en la misma carpeta.
+
+        // Manejar el botón de "Copiar Código"
+        document.getElementById("copiar-btn").addEventListener("click", () => {
+            const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
+            navigator.clipboard.writeText(codigo).then(() => {
+                alert("El código se ha copiado al portapapeles.");
+            });
         });
     </script>
 </body>
