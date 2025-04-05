@@ -12,7 +12,7 @@
             text-align: center;
             padding: 20px;
         }
-        button {
+        button, input, select {
             background-color: #5a9;
             color: white;
             font-size: 16px;
@@ -22,79 +22,115 @@
             border-radius: 10px;
             cursor: pointer;
         }
-        button:hover {
+        button:hover, input:hover, select:hover {
             background-color: #47a;
         }
-        select, input {
-            margin: 10px;
-            padding: 5px;
-            font-size: 16px;
+        input, select {
+            width: 200px;
         }
-        #codigo {
-            margin-top: 20px;
-            font-size: 18px;
+        #panel, #generador {
+            display: none;
+        }
+        h1, h2 {
+            color: #5a9;
         }
     </style>
 </head>
 <body>
-    <h1>Generador de Códigos</h1>
-    <p>Selecciona tu cuenta:</p>
-    <select id="usuario-select">
-        <option value="Luis">Luis</option>
-        <option value="Ana">Ana</option>
-    </select>
-    <p>Puntos disponibles: <span id="puntos">100</span></p>
-    <button id="generar-btn">Reclamar Código (50 pts)</button>
-    <button id="copiar-btn" disabled>Copiar Código</button>
-    <p id="codigo">Código generado aparecerá aquí.</p>
+    <h1>Sistema de Generador de Códigos</h1>
+    <div id="inicio">
+        <h2>Registro / Inicio de Sesión</h2>
+        <form id="registro-form">
+            <input type="text" id="nombre-usuario" placeholder="Nombre de usuario" required><br>
+            <input type="email" id="correo-electronico" placeholder="Correo electrónico" required><br>
+            <input type="number" id="edad" placeholder="Edad" required><br>
+            <select id="genero" required>
+                <option value="">Selecciona género</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+            </select><br>
+            <button type="button" id="registro-btn">Registrarse</button>
+            <button type="button" id="login-btn">Iniciar Sesión</button>
+        </form>
+    </div>
+
+    <div id="panel">
+        <h2>¡Bienvenido, <span id="usuario-actual"></span>!</h2>
+        <p>Puntos disponibles: <span id="puntos">100</span></p>
+        <button id="generar-btn">Reclamar Código (50 pts)</button>
+        <button id="copiar-btn" disabled>Copiar Código</button>
+        <p id="codigo">Código generado aparecerá aquí.</p>
+    </div>
+
     <script>
-        // Datos simulados de usuarios (en lugar de cargar desde un archivo JSON)
-        const usuarios = {
-            Luis: { puntos: 100, codigos_generados: [] },
-            Ana: { puntos: 50, codigos_generados: ["Codigo1"] }
-        };
+        // Simulación de base de datos en memoria
+        const usuarios = {};
 
-        let usuarioActual = "Luis"; // Usuario seleccionado inicialmente
+        // Manejar el registro de usuarios
+        document.getElementById("registro-btn").addEventListener("click", () => {
+            const nombre = document.getElementById("nombre-usuario").value;
+            const correo = document.getElementById("correo-electronico").value;
+            const edad = document.getElementById("edad").value;
+            const genero = document.getElementById("genero").value;
 
-        // Actualizar usuario al seleccionar en el dropdown
-        document.getElementById("usuario-select").addEventListener("change", (event) => {
-            usuarioActual = event.target.value;
-            actualizarPuntos();
+            if (usuarios[nombre]) {
+                alert("Nombre de usuario ya está en uso. Escoge otro.");
+            } else if (Object.values(usuarios).some(u => u.correo === correo)) {
+                alert("El correo electrónico ya está registrado.");
+            } else {
+                usuarios[nombre] = { correo, edad, genero, puntos: 100, codigos_generados: [] };
+                alert("Registro exitoso.");
+                document.getElementById("usuario-actual").textContent = nombre;
+                mostrarPanel(nombre);
+            }
         });
 
-        const actualizarPuntos = () => {
-            document.getElementById("puntos").textContent = usuarios[usuarioActual].puntos;
+        // Manejar el inicio de sesión
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const nombre = document.getElementById("nombre-usuario").value;
+            if (usuarios[nombre]) {
+                alert(`Inicio de sesión exitoso. Bienvenido, ${nombre}!`);
+                document.getElementById("usuario-actual").textContent = nombre;
+                mostrarPanel(nombre);
+            } else {
+                alert("Nombre de usuario no encontrado. Regístrate primero.");
+            }
+        });
+
+        // Mostrar el panel principal
+        const mostrarPanel = (usuario) => {
+            document.getElementById("inicio").style.display = "none";
+            document.getElementById("panel").style.display = "block";
+            document.getElementById("puntos").textContent = usuarios[usuario].puntos;
         };
 
-        // Manejo del botón de "Reclamar Código"
+        // Manejar el botón de "Reclamar Código"
         document.getElementById("generar-btn").addEventListener("click", () => {
-            const usuario = usuarios[usuarioActual];
-            if (usuario.puntos >= 50) {
-                // Resta puntos y genera código
-                usuario.puntos -= 50;
+            const usuario = document.getElementById("usuario-actual").textContent;
+            const datosUsuario = usuarios[usuario];
+
+            if (datosUsuario.puntos >= 50) {
+                datosUsuario.puntos -= 50;
                 const codigo = `Codigo${Math.floor(Math.random() * 1000)}`;
-                usuario.codigos_generados.push(codigo);
+                datosUsuario.codigos_generados.push(codigo);
+
                 document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
+                document.getElementById("puntos").textContent = datosUsuario.puntos;
                 document.getElementById("copiar-btn").disabled = false;
                 document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
-
-                // Actualizar puntos en pantalla
-                actualizarPuntos();
             } else {
                 alert("No tienes suficientes puntos para reclamar un código.");
             }
         });
 
-        // Manejo del botón de "Copiar Código"
+        // Manejar el botón de "Copiar Código"
         document.getElementById("copiar-btn").addEventListener("click", () => {
             const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
             navigator.clipboard.writeText(codigo).then(() => {
                 alert("El código se ha copiado al portapapeles.");
             });
         });
-
-        // Inicializar puntos al cargar la página
-        actualizarPuntos();
     </script>
 </body>
 </html>
