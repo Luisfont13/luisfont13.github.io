@@ -12,7 +12,7 @@
             text-align: center;
             padding: 20px;
         }
-        button, input, a {
+        button, input {
             background-color: #5a9;
             color: white;
             font-size: 16px;
@@ -21,11 +21,6 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        button:hover, input:hover, a:hover {
-            background-color: #47a;
         }
         input {
             width: 200px;
@@ -33,120 +28,65 @@
         h1, h2 {
             color: #5a9;
         }
-        #registro, #inicio, #panel {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <h1>Gestión de Usuarios</h1>
-    
+
     <!-- Registro -->
-    <div id="registro">
-        <h2>Registro de Usuario</h2>
-        <input type="text" id="nombre-usuario" placeholder="Nombre de usuario">
-        <input type="email" id="correo-electronico" placeholder="Correo electrónico">
+    <div>
+        <h2>Registrar Nuevo Usuario</h2>
+        <input type="text" id="nombre-usuario" placeholder="Nombre">
+        <input type="email" id="correo-electronico" placeholder="Correo">
         <input type="password" id="contraseña" placeholder="Contraseña">
-        <button id="registro-btn">Registrarse</button>
-        <p id="resultado-registro"></p>
-        <a href="#" id="ir-inicio">¿Ya tienes cuenta? Iniciar sesión</a>
+        <button id="registro-btn">Registrar Usuario</button>
     </div>
 
-    <!-- Inicio de sesión -->
-    <div id="inicio">
-        <h2>Inicio de Sesión</h2>
-        <input type="email" id="login-correo" placeholder="Correo electrónico">
-        <input type="password" id="login-contraseña" placeholder="Contraseña">
-        <button id="login-btn">Iniciar Sesión</button>
-        <p id="resultado-inicio"></p>
-        <a href="#" id="ir-registro">¿No tienes cuenta? Regístrate</a>
+    <!-- Guardar datos como JSON -->
+    <div>
+        <h2>Exportar Usuarios</h2>
+        <button id="exportar-btn">Exportar a JSON</button>
     </div>
 
-    <!-- Panel de usuario -->
-    <div id="panel">
-        <h2>Bienvenido, <span id="nombre-usuario-panel"></span>!</h2>
-        <p>Puntos disponibles: <span id="puntos-panel">0</span></p>
-        <button id="salir-btn">Cerrar Sesión</button>
-    </div>
+    <p id="mensaje"></p>
 
     <script>
-        const servidorURL = "http://127.0.0.1:5000"; // URL de tu servidor Flask
+        // Simulación de base de datos con objeto en memoria
+        const usuarios = {};
 
-        // Mostrar la sección inicial
-        document.getElementById("registro").style.display = "block";
-
-        // Registro de usuario
-        document.getElementById("registro-btn").addEventListener("click", async () => {
+        // Registrar un nuevo usuario
+        document.getElementById("registro-btn").addEventListener("click", () => {
             const nombre = document.getElementById("nombre-usuario").value.trim();
             const correo = document.getElementById("correo-electronico").value.trim();
             const contraseña = document.getElementById("contraseña").value.trim();
-            const resultado = document.getElementById("resultado-registro");
+            const mensaje = document.getElementById("mensaje");
 
             if (!nombre || !correo || !contraseña) {
-                resultado.textContent = "Por favor, completa todos los campos.";
+                mensaje.textContent = "Por favor, completa todos los campos.";
                 return;
             }
 
-            const response = await fetch(`${servidorURL}/agregar_usuario`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, correo, contraseña, puntos: 100 }) // Inicia con 100 puntos
-            });
-
-            const data = await response.json();
-            resultado.textContent = data.message || data.error;
-
-            if (response.ok) {
-                document.getElementById("registro").style.display = "none";
-                document.getElementById("inicio").style.display = "block";
-            }
-        });
-
-        // Inicio de sesión
-        document.getElementById("login-btn").addEventListener("click", async () => {
-            const correo = document.getElementById("login-correo").value.trim();
-            const contraseña = document.getElementById("login-contraseña").value.trim();
-            const resultado = document.getElementById("resultado-inicio");
-
-            if (!correo || !contraseña) {
-                resultado.textContent = "Por favor, completa todos los campos.";
+            if (usuarios[correo]) {
+                mensaje.textContent = "El usuario ya existe.";
                 return;
             }
 
-            const response = await fetch(`${servidorURL}/iniciar_sesion`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo, contraseña })
-            });
-
-            const data = await response.json();
-            resultado.textContent = data.message || data.error;
-
-            if (response.ok) {
-                document.getElementById("inicio").style.display = "none";
-                document.getElementById("panel").style.display = "block";
-                document.getElementById("nombre-usuario-panel").textContent = data.nombre;
-                document.getElementById("puntos-panel").textContent = data.puntos;
-            }
+            usuarios[correo] = { nombre, contraseña, puntos: 100 }; // Puntos por defecto
+            mensaje.textContent = "Usuario registrado exitosamente.";
         });
 
-        // Navegación entre registro e inicio
-        document.getElementById("ir-inicio").addEventListener("click", (event) => {
-            event.preventDefault();
-            document.getElementById("registro").style.display = "none";
-            document.getElementById("inicio").style.display = "block";
-        });
+        // Exportar usuarios a un archivo JSON
+        document.getElementById("exportar-btn").addEventListener("click", () => {
+            const dataStr = JSON.stringify(usuarios, null, 4);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
 
-        document.getElementById("ir-registro").addEventListener("click", (event) => {
-            event.preventDefault();
-            document.getElementById("inicio").style.display = "none";
-            document.getElementById("registro").style.display = "block";
-        });
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "usuarios.json";
+            a.click();
 
-        // Cerrar sesión
-        document.getElementById("salir-btn").addEventListener("click", () => {
-            document.getElementById("panel").style.display = "none";
-            document.getElementById("inicio").style.display = "block";
+            URL.revokeObjectURL(url);
         });
     </script>
 </body>
