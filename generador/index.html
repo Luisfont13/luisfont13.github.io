@@ -3,79 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Puntos</title>
+    <title>Generador de Códigos - Admin Panel</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #2d2d2d;
+            color: white;
             text-align: center;
             padding: 20px;
         }
-        button {
+        button, input, select, a {
             background-color: #5a9;
             color: white;
             font-size: 16px;
             padding: 10px 20px;
             margin: 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
-        button:hover {
+        button:hover, input:hover, select:hover, a:hover {
             background-color: #47a;
+        }
+        input, select {
+            width: 200px;
+        }
+        #inicio, #registro, #panel, #admin-panel {
+            display: none;
+        }
+        h1, h2 {
+            color: #5a9;
+        }
+        a {
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <h1>Gestión de Puntos</h1>
-    <input type="email" id="correo" placeholder="Correo del usuario">
-    <button id="consultar-btn">Consultar Puntos</button>
-    <button id="recargar-btn">Recargar Puntos</button>
-    <div id="resultado"></div>
+    <h1>Generador de Códigos</h1>
+
+    <div id="registro">
+        <h2>Registro</h2>
+        <form id="registro-form">
+            <input type="text" id="nombre-usuario" placeholder="Nombre de usuario" required><br>
+            <input type="email" id="correo-electronico" placeholder="Correo electrónico" required><br>
+            <input type="password" id="contraseña" placeholder="Contraseña" required><br>
+            <input type="number" id="edad" placeholder="Edad" required><br>
+            <select id="genero" required>
+                <option value="">Selecciona género</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+            </select><br>
+            <button type="button" id="registro-btn">Registrarse</button>
+        </form>
+        <a href="#" id="ir-inicio">¿Ya tienes cuenta? Iniciar sesión</a>
+    </div>
+
+    <div id="inicio">
+        <h2>Inicio de Sesión</h2>
+        <form id="login-form">
+            <input type="email" id="login-correo" placeholder="Correo electrónico" required><br>
+            <input type="password" id="login-contraseña" placeholder="Contraseña" required><br>
+            <button type="button" id="login-btn">Iniciar Sesión</button>
+        </form>
+        <a href="#" id="ir-registro">¿No tienes cuenta? Regístrate</a>
+    </div>
+
+    <div id="panel">
+        <h2>¡Bienvenido, <span id="usuario-actual"></span>!</h2>
+        <p>Puntos disponibles: <span id="puntos">100</span></p>
+        <button id="generar-btn">Reclamar Código (50 pts)</button>
+        <button id="copiar-btn" disabled>Copiar Código</button>
+        <p id="codigo">Código generado aparecerá aquí.</p>
+    </div>
+
+    <!-- Panel de Administrador -->
+    <div id="admin-panel">
+        <h2>Panel de Administrador</h2>
+        <p>Recargar puntos:</p>
+        <input type="email" id="correo-admin" placeholder="Correo del usuario">
+        <input type="number" id="puntos-admin" placeholder="Cantidad de puntos">
+        <button id="recargar-puntos">Recargar Puntos</button>
+
+        <p>Agregar usuario:</p>
+        <input type="email" id="nuevo-correo" placeholder="Correo del nuevo usuario">
+        <input type="text" id="nuevo-nombre" placeholder="Nombre del usuario">
+        <input type="number" id="nuevo-puntos" placeholder="Puntos iniciales">
+        <button id="agregar-usuario">Agregar Usuario</button>
+        <div id="admin-resultado"></div>
+    </div>
+
+    <button id="mostrar-panel">Acceder al Panel de Administrador</button>
 
     <script>
-        const servidorURL = "http://127.0.0.1:5000";
+        let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
-        // Consultar puntos desde el servidor
-        document.getElementById('consultar-btn').addEventListener('click', async () => {
-            const correo = document.getElementById('correo').value;
-            if (!correo) {
-                alert('Por favor, ingresa un correo.');
-                return;
-            }
-            const response = await fetch(`${servidorURL}/obtener_puntos?correo=${correo}`);
-            const data = await response.json();
-
-            if (data.error) {
-                document.getElementById('resultado').innerHTML = `<p>${data.error}</p>`;
+        window.onload = () => {
+            const usuarioActual = localStorage.getItem("usuarioActual");
+            if (usuarioActual && usuarios[usuarioActual]) {
+                document.getElementById("usuario-actual").textContent = usuarios[usuarioActual].nombre;
+                mostrarPanel(usuarioActual);
             } else {
-                document.getElementById('resultado').innerHTML = `
-                    <h3>Usuario: ${data.nombre}</h3>
-                    <p>Puntos: ${data.puntos}</p>
-                `;
+                mostrarRegistroInicio();
             }
+        };
+
+        const mostrarRegistroInicio = () => {
+            document.getElementById("registro").style.display = "block";
+            document.getElementById("inicio").style.display = "none";
+            document.getElementById("panel").style.display = "none";
+            document.getElementById("admin-panel").style.display = "none";
+        };
+
+        const mostrarPanel = (correo) => {
+            document.getElementById("registro").style.display = "none";
+            document.getElementById("inicio").style.display = "none";
+            document.getElementById("panel").style.display = "block";
+            document.getElementById("admin-panel").style.display = "none";
+            document.getElementById("puntos").textContent = usuarios[correo].puntos;
+        };
+
+        document.getElementById('mostrar-panel').addEventListener('click', () => {
+            const adminPanel = document.getElementById('admin-panel');
+            adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
         });
 
-        // Recargar puntos desde el servidor
-        document.getElementById('recargar-btn').addEventListener('click', async () => {
-            const correo = document.getElementById('correo').value;
-            const puntos = prompt('¿Cuántos puntos deseas recargar?');
-            if (!correo || !puntos) {
-                alert('Por favor, ingresa un correo y la cantidad de puntos.');
-                return;
-            }
-            const response = await fetch(`${servidorURL}/recargar_puntos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo, puntos: parseInt(puntos) })
-            });
-            const data = await response.json();
+        document.getElementById('registro-btn').addEventListener("click", () => {
+            // Registro de usuarios
+        });
 
-            if (data.message) {
-                alert(data.message);
-            } else {
-                alert(data.error);
-            }
+        document.getElementById('recargar-puntos').addEventListener("click", () => {
+            // Recargar puntos
+        });
+
+        document.getElementById('agregar-usuario').addEventListener("click", () => {
+            // Agregar nuevo usuario
         });
     </script>
 </body>
