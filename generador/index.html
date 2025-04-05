@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Códigos</title>
+    <title>Gestión de Usuarios</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,7 +12,7 @@
             text-align: center;
             padding: 20px;
         }
-        button, input, select, a {
+        button, input, a {
             background-color: #5a9;
             color: white;
             font-size: 16px;
@@ -24,172 +24,54 @@
             text-decoration: none;
             display: inline-block;
         }
-        button:hover, input:hover, select:hover, a:hover {
+        button:hover, input:hover, a:hover {
             background-color: #47a;
         }
-        input, select {
+        input {
             width: 200px;
-        }
-        #inicio, #registro, #panel {
-            display: none;
         }
         h1, h2 {
             color: #5a9;
         }
-        a {
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
-    <h1>Generador de Códigos</h1>
+    <h1>Gestión de Usuarios</h1>
+    
+    <!-- Registro -->
     <div id="registro">
-        <h2>Registro</h2>
-        <form id="registro-form">
-            <input type="text" id="nombre-usuario" placeholder="Nombre de usuario" required><br>
-            <input type="email" id="correo-electronico" placeholder="Correo electrónico" required><br>
-            <input type="password" id="contraseña" placeholder="Contraseña" required><br>
-            <input type="number" id="edad" placeholder="Edad" required><br>
-            <select id="genero" required>
-                <option value="">Selecciona género</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Otro">Otro</option>
-            </select><br>
-            <button type="button" id="registro-btn">Registrarse</button>
-        </form>
-        <a href="#" id="ir-inicio">¿Ya tienes cuenta? Iniciar sesión</a>
-    </div>
-
-    <div id="inicio">
-        <h2>Inicio de Sesión</h2>
-        <form id="login-form">
-            <input type="email" id="login-correo" placeholder="Correo electrónico" required><br>
-            <input type="password" id="login-contraseña" placeholder="Contraseña" required><br>
-            <button type="button" id="login-btn">Iniciar Sesión</button>
-        </form>
-        <a href="#" id="ir-registro">¿No tienes cuenta? Regístrate</a>
-    </div>
-
-    <div id="panel">
-        <h2>¡Bienvenido, <span id="usuario-actual"></span>!</h2>
-        <p>Puntos disponibles: <span id="puntos">100</span></p>
-        <button id="generar-btn">Reclamar Código (50 pts)</button>
-        <button id="copiar-btn" disabled>Copiar Código</button>
-        <p id="codigo">Código generado aparecerá aquí.</p>
+        <h2>Registro de Usuario</h2>
+        <input type="text" id="nombre-usuario" placeholder="Nombre de usuario">
+        <input type="email" id="correo-electronico" placeholder="Correo electrónico">
+        <input type="number" id="puntos-iniciales" placeholder="Puntos iniciales (Opcional)">
+        <button id="registro-btn">Registrar Usuario</button>
+        <p id="resultado-registro"></p>
     </div>
 
     <script>
-        // Gestión de usuarios en el navegador
-        let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
+        const servidorURL = "http://127.0.0.1:5000"; // URL de tu servidor Flask
 
-        window.onload = () => {
-            const usuarioActual = localStorage.getItem("usuarioActual");
-            if (usuarioActual && usuarios[usuarioActual]) {
-                alert(`¡Bienvenido de nuevo, ${usuarios[usuarioActual].nombre}!`);
-                document.getElementById("usuario-actual").textContent = usuarios[usuarioActual].nombre;
-                mostrarPanel(usuarioActual);
-            } else {
-                mostrarRegistroInicio();
-            }
-        };
+        // Función para registrar un nuevo usuario en el servidor
+        document.getElementById('registro-btn').addEventListener('click', async () => {
+            const nombre = document.getElementById('nombre-usuario').value.trim();
+            const correo = document.getElementById('correo-electronico').value.trim();
+            const puntos = parseInt(document.getElementById('puntos-iniciales').value.trim(), 10) || 100; // Puntos por defecto: 100
 
-        const mostrarRegistroInicio = () => {
-            document.getElementById("registro").style.display = "block";
-            document.getElementById("inicio").style.display = "none";
-            document.getElementById("panel").style.display = "none";
-        };
+            const resultado = document.getElementById('resultado-registro');
 
-        const mostrarInicioSesion = () => {
-            document.getElementById("registro").style.display = "none";
-            document.getElementById("inicio").style.display = "block";
-            document.getElementById("panel").style.display = "none";
-        };
-
-        const mostrarPanel = (correo) => {
-            document.getElementById("registro").style.display = "none";
-            document.getElementById("inicio").style.display = "none";
-            document.getElementById("panel").style.display = "block";
-            document.getElementById("puntos").textContent = usuarios[correo].puntos;
-            localStorage.setItem("usuarioActual", correo);
-        };
-
-        // Registro de usuarios
-        document.getElementById("registro-btn").addEventListener("click", () => {
-            const nombre = document.getElementById("nombre-usuario").value.trim();
-            const correo = document.getElementById("correo-electronico").value.trim();
-            const contraseña = document.getElementById("contraseña").value.trim();
-            const edad = document.getElementById("edad").value.trim();
-            const genero = document.getElementById("genero").value;
-
-            if (!nombre || !correo || !contraseña || !edad || !genero) {
-                alert("Todos los campos son obligatorios. Por favor, completa el formulario.");
+            if (!nombre || !correo) {
+                resultado.textContent = "Por favor, completa todos los campos obligatorios.";
                 return;
             }
 
-            if (usuarios[correo]) {
-                alert("El correo ya está registrado. Usa otro.");
-                return;
-            }
-
-            usuarios[correo] = { nombre, contraseña, edad, genero, puntos: 100, codigos_generados: [] };
-            localStorage.setItem("usuarios", JSON.stringify(usuarios));
-            alert("Registro exitoso.");
-            mostrarPanel(correo);
-        });
-
-        // Inicio de sesión
-        document.getElementById("login-btn").addEventListener("click", () => {
-            const correo = document.getElementById("login-correo").value.trim();
-            const contraseña = document.getElementById("login-contraseña").value.trim();
-
-            if (usuarios[correo] && usuarios[correo].contraseña === contraseña) {
-                alert(`Inicio de sesión exitoso. Bienvenido, ${usuarios[correo].nombre}!`);
-                document.getElementById("usuario-actual").textContent = usuarios[correo].nombre;
-                mostrarPanel(correo);
-            } else {
-                alert("Correo o contraseña incorrectos.");
-            }
-        });
-
-        // Navegación entre registro e inicio de sesión
-        document.getElementById("ir-inicio").addEventListener("click", (event) => {
-            event.preventDefault();
-            mostrarInicioSesion();
-        });
-
-        document.getElementById("ir-registro").addEventListener("click", (event) => {
-            event.preventDefault();
-            mostrarRegistroInicio();
-        });
-
-        // Generación de códigos
-        document.getElementById("generar-btn").addEventListener("click", () => {
-            const correo = localStorage.getItem("usuarioActual");
-            const usuario = usuarios[correo];
-
-            if (usuario.puntos >= 50) {
-                usuario.puntos -= 50;
-                const codigo = `Codigo${Math.floor(Math.random() * 1000)}`;
-                usuario.codigos_generados.push(codigo);
-
-                document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
-                document.getElementById("puntos").textContent = usuario.puntos;
-                document.getElementById("copiar-btn").disabled = false;
-                document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
-
-                localStorage.setItem("usuarios", JSON.stringify(usuarios));
-            } else {
-                alert("No tienes suficientes puntos para reclamar un código.");
-            }
-        });
-
-        // Copiar código al portapapeles
-        document.getElementById("copiar-btn").addEventListener("click", () => {
-            const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
-            navigator.clipboard.writeText(codigo).then(() => {
-                alert("El código se ha copiado al portapapeles.");
+            const response = await fetch(`${servidorURL}/agregar_usuario`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, correo, puntos })
             });
+
+            const data = await response.json();
+            resultado.textContent = data.message || data.error;
         });
     </script>
 </body>
