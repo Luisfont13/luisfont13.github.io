@@ -1,2 +1,45 @@
-<button onclick="ejecutarPython()">Generador de Códigos</button>
-<script>function ejecutarPython() {window.open('generador/ejecutar.sh'); // Para Windows}</script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Códigos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Generador de Códigos</h1>
+    </header>
+    <section>
+        <p>Haz clic en el botón para abrir el generador de códigos.</p>
+        <button id="generador-btn">Abrir Generador</button>
+    </section>
+    <script>
+        document.getElementById('generador-btn').addEventListener('click', () => {
+            window.open('ejecutar.sh'); // Asumiendo que estás en Linux y el archivo está en la misma carpeta.
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Códigos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Generador de Códigos</h1>
+    </header>
+    <section>
+        <p>Haz clic en el botón para abrir el generador de códigos.</p>
+        <button id="generador-btn">Abrir Generador</button>
+    </section>
+    <script>
+        document.getElementById('generador-btn').addEventListener('click', () => {
+            window.open('ejecutar.sh'); // Asumiendo que estás en Linux y el archivo está en la misma carpeta.
+        });
+    </script>
+</body>
+</html>
