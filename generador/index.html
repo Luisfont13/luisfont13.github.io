@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Códigos - Admin Panel</title>
+    <title>Generador de Códigos</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,7 +30,7 @@
         input, select {
             width: 200px;
         }
-        #inicio, #registro, #panel, #admin-panel {
+        #inicio, #registro, #panel {
             display: none;
         }
         h1, h2 {
@@ -43,7 +43,6 @@
 </head>
 <body>
     <h1>Generador de Códigos</h1>
-
     <div id="registro">
         <h2>Registro</h2>
         <form id="registro-form">
@@ -80,30 +79,14 @@
         <p id="codigo">Código generado aparecerá aquí.</p>
     </div>
 
-    <!-- Panel de Administrador -->
-    <div id="admin-panel">
-        <h2>Panel de Administrador</h2>
-        <p>Recargar puntos:</p>
-        <input type="email" id="correo-admin" placeholder="Correo del usuario">
-        <input type="number" id="puntos-admin" placeholder="Cantidad de puntos">
-        <button id="recargar-puntos">Recargar Puntos</button>
-
-        <p>Agregar usuario:</p>
-        <input type="email" id="nuevo-correo" placeholder="Correo del nuevo usuario">
-        <input type="text" id="nuevo-nombre" placeholder="Nombre del usuario">
-        <input type="number" id="nuevo-puntos" placeholder="Puntos iniciales">
-        <button id="agregar-usuario">Agregar Usuario</button>
-        <div id="admin-resultado"></div>
-    </div>
-
-    <button id="mostrar-panel">Acceder al Panel de Administrador</button>
-
     <script>
+        // Gestión de usuarios en el navegador
         let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
         window.onload = () => {
             const usuarioActual = localStorage.getItem("usuarioActual");
             if (usuarioActual && usuarios[usuarioActual]) {
+                alert(`¡Bienvenido de nuevo, ${usuarios[usuarioActual].nombre}!`);
                 document.getElementById("usuario-actual").textContent = usuarios[usuarioActual].nombre;
                 mostrarPanel(usuarioActual);
             } else {
@@ -115,32 +98,98 @@
             document.getElementById("registro").style.display = "block";
             document.getElementById("inicio").style.display = "none";
             document.getElementById("panel").style.display = "none";
-            document.getElementById("admin-panel").style.display = "none";
+        };
+
+        const mostrarInicioSesion = () => {
+            document.getElementById("registro").style.display = "none";
+            document.getElementById("inicio").style.display = "block";
+            document.getElementById("panel").style.display = "none";
         };
 
         const mostrarPanel = (correo) => {
             document.getElementById("registro").style.display = "none";
             document.getElementById("inicio").style.display = "none";
             document.getElementById("panel").style.display = "block";
-            document.getElementById("admin-panel").style.display = "none";
             document.getElementById("puntos").textContent = usuarios[correo].puntos;
+            localStorage.setItem("usuarioActual", correo);
         };
 
-        document.getElementById('mostrar-panel').addEventListener('click', () => {
-            const adminPanel = document.getElementById('admin-panel');
-            adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
+        // Registro de usuarios
+        document.getElementById("registro-btn").addEventListener("click", () => {
+            const nombre = document.getElementById("nombre-usuario").value.trim();
+            const correo = document.getElementById("correo-electronico").value.trim();
+            const contraseña = document.getElementById("contraseña").value.trim();
+            const edad = document.getElementById("edad").value.trim();
+            const genero = document.getElementById("genero").value;
+
+            if (!nombre || !correo || !contraseña || !edad || !genero) {
+                alert("Todos los campos son obligatorios. Por favor, completa el formulario.");
+                return;
+            }
+
+            if (usuarios[correo]) {
+                alert("El correo ya está registrado. Usa otro.");
+                return;
+            }
+
+            usuarios[correo] = { nombre, contraseña, edad, genero, puntos: 100, codigos_generados: [] };
+            localStorage.setItem("usuarios", JSON.stringify(usuarios));
+            alert("Registro exitoso.");
+            mostrarPanel(correo);
         });
 
-        document.getElementById('registro-btn').addEventListener("click", () => {
-            // Registro de usuarios
+        // Inicio de sesión
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const correo = document.getElementById("login-correo").value.trim();
+            const contraseña = document.getElementById("login-contraseña").value.trim();
+
+            if (usuarios[correo] && usuarios[correo].contraseña === contraseña) {
+                alert(`Inicio de sesión exitoso. Bienvenido, ${usuarios[correo].nombre}!`);
+                document.getElementById("usuario-actual").textContent = usuarios[correo].nombre;
+                mostrarPanel(correo);
+            } else {
+                alert("Correo o contraseña incorrectos.");
+            }
         });
 
-        document.getElementById('recargar-puntos').addEventListener("click", () => {
-            // Recargar puntos
+        // Navegación entre registro e inicio de sesión
+        document.getElementById("ir-inicio").addEventListener("click", (event) => {
+            event.preventDefault();
+            mostrarInicioSesion();
         });
 
-        document.getElementById('agregar-usuario').addEventListener("click", () => {
-            // Agregar nuevo usuario
+        document.getElementById("ir-registro").addEventListener("click", (event) => {
+            event.preventDefault();
+            mostrarRegistroInicio();
+        });
+
+        // Generación de códigos
+        document.getElementById("generar-btn").addEventListener("click", () => {
+            const correo = localStorage.getItem("usuarioActual");
+            const usuario = usuarios[correo];
+
+            if (usuario.puntos >= 50) {
+                usuario.puntos -= 50;
+                const codigo = `Codigo${Math.floor(Math.random() * 1000)}`;
+                usuario.codigos_generados.push(codigo);
+
+                document.getElementById("codigo").textContent = `Código generado: ${codigo}`;
+                document.getElementById("puntos").textContent = usuario.puntos;
+                document.getElementById("copiar-btn").disabled = false;
+                document.getElementById("copiar-btn").setAttribute("data-codigo", codigo);
+
+                localStorage.setItem("usuarios", JSON.stringify(usuarios));
+            } else {
+                alert("No tienes suficientes puntos para reclamar un código.");
+            }
+        });
+
+        // Copiar código al portapapeles
+        document.getElementById("copiar-btn").addEventListener("click", () => {
+            const codigo = document.getElementById("copiar-btn").getAttribute("data-codigo");
+            navigator.clipboard.writeText(codigo).then(() => {
+                alert("El código se ha copiado al portapapeles.");
+            });
         });
     </script>
 </body>
